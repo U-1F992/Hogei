@@ -12,6 +12,7 @@ public class WhaleController
     ConcurrentQueue<Operation> concurrentQueue = new();
     Task dequeue;
 
+    string newline;
     string buffer = "";
     object lockObject = new Object();
 
@@ -23,10 +24,6 @@ public class WhaleController
         {
             throw new Exception("serialPort.Encoding must be Encoding.UTF8");
         }
-        if (serialPort.NewLine != "\r\n")
-        {
-            throw new Exception("serialPort.NewLine must be \r\n");
-        }
         if (serialPort.RtsEnable != true)
         {
             throw new Exception("serialPort.RtsEnable must be true");
@@ -37,6 +34,7 @@ public class WhaleController
         }
 
         this.serialPort = serialPort;
+        newline = serialPort.NewLine;
 
         // キューを順次シリアルポートに流すTask
         dequeue = Task.Run(async () =>
@@ -47,7 +45,7 @@ public class WhaleController
                 {
                     continue;
                 }
-                if (concurrentQueue.TryDequeue(out Operation? operation))
+                if (!concurrentQueue.TryDequeue(out Operation? operation))
                 {
                     continue;
                 }
@@ -56,6 +54,7 @@ public class WhaleController
                     continue;
                 }
 
+                logger.Trace("Dequeue: {0}", JoinEnumCollection(operation.Keys));
                 await Run(operation);
             }
         }, cancellationToken);
@@ -76,9 +75,8 @@ public class WhaleController
                 buffer += message;
             }
 
-            var newline = serialPort.NewLine;
             var split = buffer.Split(newline);
-            if (split.Length == 0)
+            if (split.Length <= 1)
             {
                 return;
             }
@@ -99,6 +97,7 @@ public class WhaleController
         foreach (var operation in sequence)
         {
             concurrentQueue.Enqueue(operation);
+            logger.Trace("Enqueue: {0}", JoinEnumCollection(operation.Keys));
         }
     }
 
@@ -111,13 +110,14 @@ public class WhaleController
     }
     public async Task Run(Operation operation)
     {
+        logger.Trace("Run: {0}", JoinEnumCollection(operation.Keys));
         await Task.WhenAll(
             Task.Run(() =>
             {
                 foreach (var key in operation.Keys)
                 {
                     // https://www.arduino.cc/reference/en/language/functions/communication/serial/println/
-                    var buffer = new char[] { (char)key, '\r', '\n' };
+                    var buffer = (new char[] { (char)key }).Concat(newline.ToCharArray()).ToArray();
                     var bytes = Encoding.UTF8.GetBytes(buffer);
 
                     this.serialPort.BaseStream.WriteAsync(bytes);
@@ -125,5 +125,23 @@ public class WhaleController
             }),
             Task.Delay(operation.Wait)
         );
+    }
+    public void WaitForDequeue()
+    {
+        logger.Trace("Wait for dequeue...");
+        while (!concurrentQueue.IsEmpty)
+        {
+            Thread.Sleep(1);
+        }
+        logger.Trace("Dequeue completed");
+    }
+    string JoinEnumCollection(IReadOnlyCollection<KeySpecifier> keys, string separator = ",")
+    {
+        var join = "";
+        foreach (var key in keys)
+        {
+            join += key + separator;
+        }
+        return join.Remove(join.Length - separator.Length);
     }
 }

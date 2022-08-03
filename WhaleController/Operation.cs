@@ -9,7 +9,7 @@ public record Operation
             return _Keys;
         }
     }
-    public readonly TimeSpan Wait;
+    public TimeSpan Wait { init; get; }
     public Operation(ICollection<KeySpecifier> keys, TimeSpan wait)
     {
         _Keys = keys.ToArray();
