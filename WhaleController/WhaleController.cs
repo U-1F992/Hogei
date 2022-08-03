@@ -16,7 +16,6 @@ public class WhaleController
     string buffer = "";
     object lockObject = new Object();
 
-
     public WhaleController(SerialPort serialPort) : this(serialPort, CancellationToken.None) { }
     public WhaleController(SerialPort serialPort, CancellationToken cancellationToken)
     {
@@ -54,13 +53,13 @@ public class WhaleController
                     continue;
                 }
 
-                logger.Trace("Dequeue: {0}", JoinEnumCollection(operation.Keys));
-                await Run(operation);
+                logger.Debug("Dequeue: {0}", JoinEnumCollection(operation.Keys));
+                await Run(operation, cancellationToken);
             }
         }, cancellationToken);
 
         // シリアルポートからの出力をログに書く
-        this.serialPort.DataReceived += (object sender, SerialDataReceivedEventArgs e) =>
+        this.serialPort.DataReceived += (object sender, SerialDataReceivedEventArgs eventArgs) =>
         {
             var serialPort = (SerialPort)sender;
             if (!serialPort.IsOpen)
@@ -97,43 +96,56 @@ public class WhaleController
         foreach (var operation in sequence)
         {
             concurrentQueue.Enqueue(operation);
-            logger.Trace("Enqueue: {0}", JoinEnumCollection(operation.Keys));
+            logger.Debug("Enqueue: {0}", JoinEnumCollection(operation.Keys));
         }
     }
 
-    public async Task Run(ICollection<Operation> sequence)
+    public async Task Run(ICollection<Operation> sequence) { await Run(sequence, CancellationToken.None); }
+    public async Task Run(ICollection<Operation> sequence, CancellationToken cancellationToken)
     {
         foreach (var operation in sequence)
         {
-            await Run(operation);
+            await Run(operation, cancellationToken);
         }
     }
-    public async Task Run(Operation operation)
+    public async Task Run(Operation operation, CancellationToken cancellationToken)
     {
-        logger.Trace("Run: {0}", JoinEnumCollection(operation.Keys));
-        await Task.WhenAll(
-            Task.Run(() =>
-            {
-                foreach (var key in operation.Keys)
+        try
+        {
+            logger.Debug("Run: {0}", JoinEnumCollection(operation.Keys));
+            await Task.WhenAll(
+                Task.Run(() =>
                 {
-                    // https://www.arduino.cc/reference/en/language/functions/communication/serial/println/
-                    var buffer = (new char[] { (char)key }).Concat(newline.ToCharArray()).ToArray();
-                    var bytes = Encoding.UTF8.GetBytes(buffer);
+                    foreach (var key in operation.Keys)
+                    {
+                        if (cancellationToken.IsCancellationRequested)
+                        {
+                            return;
+                        }
 
-                    this.serialPort.BaseStream.WriteAsync(bytes);
-                }
-            }),
-            Task.Delay(operation.Wait)
-        );
+                        // https://www.arduino.cc/reference/en/language/functions/communication/serial/println/
+                        var buffer = (new char[] { (char)key }).Concat(newline.ToCharArray()).ToArray();
+                        var bytes = Encoding.UTF8.GetBytes(buffer);
+
+                        this.serialPort.BaseStream.WriteAsync(bytes);
+                    }
+                }, cancellationToken),
+                Task.Delay(operation.Wait, cancellationToken)
+            );
+        }
+        catch (OperationCanceledException ex)
+        {
+            logger.Warn(ex, "Operation canceled");
+        }
     }
     public void WaitForDequeue()
     {
-        logger.Trace("Wait for dequeue...");
+        logger.Debug("Wait for dequeue...");
         while (!concurrentQueue.IsEmpty)
         {
             Thread.Sleep(1);
         }
-        logger.Trace("Dequeue completed");
+        logger.Debug("Dequeue completed");
     }
     string JoinEnumCollection(IReadOnlyCollection<KeySpecifier> keys, string separator = ",")
     {

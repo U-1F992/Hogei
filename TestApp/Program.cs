@@ -2,6 +2,13 @@
 using System.Text;
 using HogeiJunkyard;
 
+var cancellationTokenSource = new CancellationTokenSource();
+var cancellationToken = cancellationTokenSource.Token;
+Console.CancelKeyPress += (object? sender, ConsoleCancelEventArgs eventArgs) =>
+{
+    cancellationTokenSource.Cancel();
+};
+
 using var serialPort = new SerialPort("COM6", 4800)
 {
     Encoding = Encoding.UTF8,
@@ -10,7 +17,7 @@ using var serialPort = new SerialPort("COM6", 4800)
     RtsEnable = true
 };
 serialPort.Open();
-var whale = new WhaleController(serialPort);
+var whale = new WhaleController(serialPort, cancellationToken);
 await Task.Delay(500);
 
 for (var i = 0; i < 10; i++)
@@ -31,7 +38,7 @@ await Task.Delay(3000).ContinueWith(async task =>
         new Operation(new KeySpecifier[] { KeySpecifier.Start_Up }, TimeSpan.FromMilliseconds(500)),
         new Operation(new KeySpecifier[] { KeySpecifier.B_Down }, TimeSpan.FromMilliseconds(500)),
         new Operation(new KeySpecifier[] { KeySpecifier.B_Up }, TimeSpan.FromMilliseconds(500)),
-    });
+    }, cancellationToken);
 });
 
 whale.WaitForDequeue();
