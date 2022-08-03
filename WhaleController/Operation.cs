@@ -1,7 +1,7 @@
 namespace HogeiJunkyard;
 public record Operation
 {
-    private KeySpecifier[] _Keys;
+    KeySpecifier[] _Keys;
     public IReadOnlyCollection<KeySpecifier> Keys
     {
         get
