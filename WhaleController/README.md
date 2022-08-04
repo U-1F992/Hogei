@@ -5,6 +5,13 @@
 ## Usage
 
 ```csharp
+using System.IO.Ports;
+using System.Text;
+using HogeiJunkyard;
+
+var cancellationTokenSource = new CancellationTokenSource();
+var cancellationToken = cancellationTokenSource.Token;
+
 // SerialPortの宣言方法と設定
 using var serialPort = new SerialPort("COM6", 4800)
 {
@@ -35,5 +42,5 @@ await whale.Run(new Operation[]
 }, cancellationToken);
 
 // キューが空になるまで待機します。
-whale.WaitForDequeue();
+await whale.WaitForDequeue();
 ```

@@ -108,7 +108,7 @@ public class WhaleController
             await Run(operation, cancellationToken);
         }
     }
-    public async Task Run(Operation operation, CancellationToken cancellationToken)
+    async Task Run(Operation operation, CancellationToken cancellationToken)
     {
         try
         {
@@ -138,13 +138,14 @@ public class WhaleController
             logger.Warn(ex, "Operation canceled");
         }
     }
-    public void WaitForDequeue()
+    public async Task WaitForDequeue() { await WaitForDequeue(CancellationToken.None); }
+    public async Task WaitForDequeue(CancellationToken cancellationToken)
     {
         logger.Debug("Wait for dequeue...");
-        while (!concurrentQueue.IsEmpty)
+        await Task.Run(() =>
         {
-            Thread.Sleep(1);
-        }
+            while (!concurrentQueue.IsEmpty && !cancellationToken.IsCancellationRequested) ;
+        }, cancellationToken);
         logger.Debug("Dequeue completed");
     }
     string JoinEnumCollection(IReadOnlyCollection<KeySpecifier> keys, string separator = ",")
