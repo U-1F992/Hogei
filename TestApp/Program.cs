@@ -1,4 +1,6 @@
-﻿using System.IO.Ports;
+﻿
+
+using System.IO.Ports;
 using System.Text;
 using HogeiJunkyard;
 
