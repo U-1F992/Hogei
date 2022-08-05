@@ -52,8 +52,6 @@ public class WhaleController
                 {
                     continue;
                 }
-
-                logger.Debug("Dequeue: {0}", JoinEnumCollection(operation.Keys));
                 await Run(operation, cancellationToken);
             }
         }, cancellationToken);
@@ -96,7 +94,6 @@ public class WhaleController
         foreach (var operation in sequence)
         {
             concurrentQueue.Enqueue(operation);
-            logger.Debug("Enqueue: {0}", JoinEnumCollection(operation.Keys));
         }
     }
 
@@ -112,7 +109,6 @@ public class WhaleController
     {
         try
         {
-            logger.Debug("Run: {0}", JoinEnumCollection(operation.Keys));
             await Task.WhenAll(
                 Task.Run(() =>
                 {
@@ -133,20 +129,18 @@ public class WhaleController
                 Task.Delay(operation.Wait, cancellationToken)
             );
         }
-        catch (OperationCanceledException ex)
+        catch (OperationCanceledException)
         {
-            logger.Warn(ex, "Operation canceled");
+            throw;
         }
     }
     public async Task WaitForDequeue() { await WaitForDequeue(CancellationToken.None); }
     public async Task WaitForDequeue(CancellationToken cancellationToken)
     {
-        logger.Debug("Wait for dequeue...");
         await Task.Run(() =>
         {
             while (!concurrentQueue.IsEmpty && !cancellationToken.IsCancellationRequested) ;
         }, cancellationToken);
-        logger.Debug("Dequeue completed");
     }
     string JoinEnumCollection(IReadOnlyCollection<KeySpecifier> keys, string separator = ",")
     {

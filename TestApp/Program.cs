@@ -5,7 +5,7 @@ using HogeiJunkyard;
 var cancellationTokenSource = new CancellationTokenSource();
 var cancellationToken = cancellationTokenSource.Token;
 
-// SerialPortの宣言方法と設定
+
 using var serialPort = new SerialPort("COM6", 4800)
 {
     Encoding = Encoding.UTF8,
@@ -16,23 +16,104 @@ using var serialPort = new SerialPort("COM6", 4800)
 serialPort.Open();
 var whale = new WhaleController(serialPort, cancellationToken);
 
-// キューに詰めた操作は、非同期で順次実行されます。
-whale.Enqueue(new Operation[]
-{
-    new Operation(new KeySpecifier[] { KeySpecifier.Right_Down }, TimeSpan.FromMilliseconds(500)),
-    new Operation(new KeySpecifier[] { KeySpecifier.Right_Up }, TimeSpan.FromMilliseconds(500)),
-    new Operation(new KeySpecifier[] { KeySpecifier.Left_Down }, TimeSpan.FromMilliseconds(500)),
-    new Operation(new KeySpecifier[] { KeySpecifier.Left_Up }, TimeSpan.FromMilliseconds(500)),
-});
+var lazyTimer = new LazyTimer();
 
-// Runメソッドを使用すると、キューとは関係なく、即座に実行することもできます。
-await whale.Run(new Operation[]
-{
-    new Operation(new KeySpecifier[] { KeySpecifier.Start_Down }, TimeSpan.FromMilliseconds(500)),
-    new Operation(new KeySpecifier[] { KeySpecifier.Start_Up }, TimeSpan.FromMilliseconds(500)),
-    new Operation(new KeySpecifier[] { KeySpecifier.B_Down }, TimeSpan.FromMilliseconds(500)),
-    new Operation(new KeySpecifier[] { KeySpecifier.B_Up }, TimeSpan.FromMilliseconds(500)),
-}, cancellationToken);
+await Task.Delay(1000);
+await showFourTimes(whale);
 
-// キューが空になるまで待機します。
-await whale.WaitForDequeue();
+async Task showFourTimes(WhaleController whale)
+{
+    var lazyTimers = new LazyTimer[]
+    {
+        new LazyTimer(),
+        new LazyTimer(),
+        new LazyTimer()
+    };
+
+    var Key_A_Down = new KeySpecifier[] { KeySpecifier.A_Down };
+    var Key_A_Up = new KeySpecifier[] { KeySpecifier.A_Up };
+    var standardDuration = TimeSpan.FromMilliseconds(200);
+
+    var sequence = new Operation[]
+    {
+        new Operation(Key_A_Down, standardDuration),
+        new Operation(Key_A_Up, TimeSpan.FromMilliseconds(9000)),
+        new Operation(Key_A_Down, standardDuration),
+        new Operation(Key_A_Up, TimeSpan.FromMilliseconds(1500)),
+        new Operation(Key_A_Down, standardDuration),
+        new Operation(Key_A_Up, TimeSpan.FromMilliseconds(5000)),
+        new Operation(Key_A_Down, standardDuration),
+        new Operation(Key_A_Up, TimeSpan.FromMilliseconds(4000)),
+        new Operation(Key_A_Down, standardDuration),
+        new Operation(Key_A_Up, TimeSpan.FromMilliseconds(11500)),
+
+        new Operation(Key_A_Down, standardDuration),
+        new Operation(Key_A_Up, TimeSpan.FromMilliseconds(1500)),
+        new Operation(Key_A_Down, standardDuration),
+        new Operation(Key_A_Up, TimeSpan.FromMilliseconds(1500)),
+        new Operation(Key_A_Down, standardDuration),
+        new Operation(Key_A_Up, TimeSpan.FromMilliseconds(1500)),
+        new Operation(Key_A_Down, standardDuration),
+        new Operation(Key_A_Up, TimeSpan.FromMilliseconds(59000)),
+
+        new Operation(Key_A_Down, standardDuration),
+        new Operation(Key_A_Up, TimeSpan.FromMilliseconds(1500)),
+        new Operation(Key_A_Down, standardDuration),
+        new Operation(Key_A_Up, TimeSpan.FromMilliseconds(1500)),
+        new Operation(Key_A_Down, standardDuration),
+        new Operation(Key_A_Up, TimeSpan.FromMilliseconds(1500)),
+        new Operation(Key_A_Down, standardDuration),
+        new Operation(Key_A_Up, TimeSpan.FromMilliseconds(3000)),
+        new Operation(Key_A_Down, standardDuration),
+        new Operation(Key_A_Up, TimeSpan.FromMilliseconds(1000)),
+        new Operation(new KeySpecifier[] { KeySpecifier.Start_Down }, TimeSpan.FromMilliseconds(1000)),
+        new Operation(new KeySpecifier[] { KeySpecifier.Start_Up }, TimeSpan.FromMilliseconds(1000)),
+        new Operation(Key_A_Down, standardDuration),
+        new Operation(Key_A_Up, TimeSpan.FromMilliseconds(7000)),
+        new Operation(Key_A_Down, standardDuration),
+        new Operation(Key_A_Up, TimeSpan.FromMilliseconds(2000)),
+        new Operation(Key_A_Down, standardDuration),
+        new Operation(Key_A_Up, TimeSpan.FromMilliseconds(2000)),
+        new Operation(Key_A_Down, standardDuration),
+        new Operation(Key_A_Up, TimeSpan.FromMilliseconds(2000)),
+        new Operation(Key_A_Down, standardDuration),
+        new Operation(Key_A_Up, TimeSpan.FromMilliseconds(32000)),
+
+        new Operation(new KeySpecifier[] { KeySpecifier.X_Down }, standardDuration),
+        new Operation(new KeySpecifier[] { KeySpecifier.X_Up }, TimeSpan.FromMilliseconds(3000)),
+        new Operation(new KeySpecifier[] { KeySpecifier.Right_Down }, standardDuration),
+        new Operation(new KeySpecifier[] { KeySpecifier.Right_Up }, TimeSpan.FromMilliseconds(2000)),
+        new Operation(Key_A_Down, standardDuration),
+        new Operation(Key_A_Up, TimeSpan.FromMilliseconds(5000)),
+
+        new Operation(new KeySpecifier[] { KeySpecifier.L_Down, KeySpecifier.R_Down, KeySpecifier.Z_Down, KeySpecifier.Start_Down }, TimeSpan.FromMilliseconds(2000)),
+        new Operation(new KeySpecifier[] { KeySpecifier.L_Up, KeySpecifier.R_Up, KeySpecifier.Z_Up, KeySpecifier.Start_Up }, TimeSpan.FromMilliseconds(4000)),
+        new Operation(new KeySpecifier[] { KeySpecifier.X_Down }, standardDuration),
+        new Operation(new KeySpecifier[] { KeySpecifier.X_Up }, TimeSpan.FromMilliseconds(1000)),
+        new Operation(Key_A_Down, standardDuration),
+        new Operation(Key_A_Up, TimeSpan.FromMilliseconds(5000)),
+    };
+
+    var tasks = Task.WhenAll
+    (
+        whale.Run(sequence),
+        lazyTimers[0].Start().ContinueWith(_ =>
+        {
+            whale.Run(sequence).Wait();
+        }),
+        lazyTimers[1].Start().ContinueWith(_ =>
+        {
+            whale.Run(sequence).Wait();
+        }),
+        lazyTimers[2].Start().ContinueWith(_ =>
+        {
+            whale.Run(sequence).Wait();
+        })
+    );
+
+    lazyTimers[0].Submit(180000);
+    lazyTimers[1].Submit(360000);
+    lazyTimers[2].Submit(540000);
+
+    await tasks;
+}
