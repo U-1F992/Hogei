@@ -16,20 +16,12 @@ using var serialPort = new SerialPort("COM6", 4800)
 serialPort.Open();
 var whale = new WhaleController(serialPort, cancellationToken);
 
-var lazyTimer = new LazyTimer();
-
 await Task.Delay(1000);
 await showFourTimes(whale);
 
 async Task showFourTimes(WhaleController whale)
 {
-    var lazyTimers = new LazyTimer[]
-    {
-        new LazyTimer(),
-        new LazyTimer(),
-        new LazyTimer()
-    };
-
+    var stopwatch = new System.Diagnostics.Stopwatch();
     var Key_A_Down = new KeySpecifier[] { KeySpecifier.A_Down };
     var Key_A_Up = new KeySpecifier[] { KeySpecifier.A_Up };
     var standardDuration = TimeSpan.FromMilliseconds(200);
@@ -96,24 +88,27 @@ async Task showFourTimes(WhaleController whale)
 
     var tasks = Task.WhenAll
     (
-        whale.Run(sequence),
-        lazyTimers[0].Start().ContinueWith(_ =>
+        new LazyTimer(TimeSpan.FromMilliseconds(0)).Start().ContinueWith(_ =>
         {
+            stopwatch.Start();
             whale.Run(sequence).Wait();
         }),
-        lazyTimers[1].Start().ContinueWith(_ =>
+        new LazyTimer(TimeSpan.FromMilliseconds(180000)).Start().ContinueWith(_ =>
         {
+            Console.WriteLine(stopwatch.ElapsedMilliseconds);
             whale.Run(sequence).Wait();
         }),
-        lazyTimers[2].Start().ContinueWith(_ =>
+        new LazyTimer(TimeSpan.FromMilliseconds(360000)).Start().ContinueWith(_ =>
         {
+            Console.WriteLine(stopwatch.ElapsedMilliseconds);
+            whale.Run(sequence).Wait();
+        }),
+        new LazyTimer(TimeSpan.FromMilliseconds(540000)).Start().ContinueWith(_ =>
+        {
+            Console.WriteLine(stopwatch.ElapsedMilliseconds);
             whale.Run(sequence).Wait();
         })
     );
-
-    lazyTimers[0].Submit(180000);
-    lazyTimers[1].Submit(360000);
-    lazyTimers[2].Submit(540000);
 
     await tasks;
 }

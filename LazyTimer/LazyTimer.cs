@@ -3,10 +3,13 @@ public class LazyTimer
 {
     Task task = Task.CompletedTask;
     TimeSpan elapsed = TimeSpan.Zero;
-    TimeSpan submitted = TimeSpan.MaxValue;
+    TimeSpan submitted;
 
-    public LazyTimer()
+    public LazyTimer() : this(TimeSpan.MaxValue) { }
+    public LazyTimer(TimeSpan timeSpan)
     {
+        submitted = timeSpan;
+
         // 初回のみ遅延があるため、コンストラクタで捨てておく
         // メモリに展開する際の何らかな気がする
         var cancellationTokenSource = new CancellationTokenSource();
@@ -53,7 +56,6 @@ public class LazyTimer
         submitted = TimeSpan.MaxValue;
     }
 
-    public void Submit(long milliseconds) { Submit(TimeSpan.FromMilliseconds(milliseconds)); }
     public void Submit(TimeSpan timeSpan)
     {
         submitted = timeSpan;
