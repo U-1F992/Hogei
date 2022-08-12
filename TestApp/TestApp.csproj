@@ -3,6 +3,11 @@
   <ItemGroup>
     <ProjectReference Include="..\WhaleController\WhaleController.csproj" />
     <ProjectReference Include="..\LazyTimer\LazyTimer.csproj" />
+    <ProjectReference Include="..\VideoCaptureWrapper\VideoCaptureWrapper.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="OpenCvSharp4.runtime.win" Version="4.6.0.20220608" />
   </ItemGroup>
 
   <PropertyGroup>

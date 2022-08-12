@@ -10,19 +10,19 @@ public class VideoCaptureWrapper
 
     VideoCapture videoCapture;
     Mat mat = new Mat();
-    Size size;
     Task task;
 
-    public VideoCaptureWrapper(VideoCapture videoCapture, Size size)
+    public VideoCaptureWrapper(VideoCapture videoCapture) : this(videoCapture, Size.Zero, null) { }
+    public VideoCaptureWrapper(VideoCapture videoCapture, Size windowSize) : this(videoCapture, windowSize, null) { }
+    public VideoCaptureWrapper(VideoCapture videoCapture, Size windowSize, string? windowName)
     {
         this.videoCapture = videoCapture;
-        this.size = size;
 
         // 接続からtimeoutで初回Matを取得できなかった場合throw
         // 不正な画像を渡すデバイスに対するフリーズ防止
         var ready = false;
-        TimeSpan timeout = TimeSpan.FromMilliseconds(5000);
         var stopwatch = new Stopwatch();
+        var timeout = TimeSpan.FromMilliseconds(5000);
 
         task = Task.WhenAll
         (
@@ -48,15 +48,22 @@ public class VideoCaptureWrapper
             Task.Run(() =>
             {
                 // プレビューを表示するタスク
-                while (!ready) Thread.Sleep(1);
+                if (windowSize == Size.Zero)
+                {
+                    return;
+                }
+                while (!ready)
+                {
+                    Thread.Sleep(1);
+                }
 
-                using var window = new Window();
+                using var window = (windowName == null ? new Window() : new Window(windowName));
                 while (true)
                 {
                     try
                     {
                         using var raw = CurrentFrame;
-                        using var resized = raw.Resize(this.size);
+                        using var resized = raw.Resize(windowSize);
                         window.ShowImage(resized);
                     }
                     catch (Exception e)
