@@ -1,9 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\WhaleController\WhaleController.csproj" />
-    <ProjectReference Include="..\LazyTimer\LazyTimer.csproj" />
-    <ProjectReference Include="..\VideoCaptureWrapper\VideoCaptureWrapper.csproj" />
+    <ProjectReference Include="..\HogeiJunkyard\HogeiJunkyard.csproj" />
   </ItemGroup>
 
   <ItemGroup>
