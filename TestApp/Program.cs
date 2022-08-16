@@ -14,7 +14,7 @@ using var serialPort = new SerialPort("COM6", 4800)
     RtsEnable = true
 };
 serialPort.Open();
-var whale = new WhaleController(serialPort, cancellationToken);
+var whale = new WhaleController(serialPort);
 
 using var videoCapture = new VideoCapture(1)
 {

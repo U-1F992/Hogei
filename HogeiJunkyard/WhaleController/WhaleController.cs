@@ -1,5 +1,4 @@
-﻿using System.Collections.Concurrent;
-using System.IO.Ports;
+﻿using System.IO.Ports;
 using System.Text;
 using NLog;
 
@@ -9,15 +8,12 @@ public class WhaleController
     static Logger logger = LogManager.GetCurrentClassLogger();
 
     SerialPort serialPort;
-    ConcurrentQueue<Operation> concurrentQueue = new();
-    Task dequeue;
 
     string newline;
     string buffer = "";
     object lockObject = new Object();
 
-    public WhaleController(SerialPort serialPort) : this(serialPort, CancellationToken.None) { }
-    public WhaleController(SerialPort serialPort, CancellationToken cancellationToken)
+    public WhaleController(SerialPort serialPort)
     {
         if (serialPort.Encoding != Encoding.UTF8)
         {
@@ -34,27 +30,6 @@ public class WhaleController
 
         this.serialPort = serialPort;
         newline = serialPort.NewLine;
-
-        // キューを順次シリアルポートに流すTask
-        dequeue = Task.Run(async () =>
-        {
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                if (!this.serialPort.IsOpen)
-                {
-                    continue;
-                }
-                if (!concurrentQueue.TryDequeue(out Operation? operation))
-                {
-                    continue;
-                }
-                if (operation == null)
-                {
-                    continue;
-                }
-                await Run(operation, cancellationToken);
-            }
-        }, cancellationToken);
 
         // シリアルポートからの出力をログに書く
         this.serialPort.DataReceived += (object sender, SerialDataReceivedEventArgs eventArgs) =>
@@ -87,14 +62,6 @@ public class WhaleController
                 buffer = buffer[(toWrite.Length + newline.Length)..];
             }
         };
-    }
-
-    public void Enqueue(ICollection<Operation> sequence)
-    {
-        foreach (var operation in sequence)
-        {
-            concurrentQueue.Enqueue(operation);
-        }
     }
 
     public async Task Run(ICollection<Operation> sequence) { await Run(sequence, CancellationToken.None); }
@@ -133,14 +100,6 @@ public class WhaleController
         {
             throw;
         }
-    }
-    public async Task WaitForDequeue() { await WaitForDequeue(CancellationToken.None); }
-    public async Task WaitForDequeue(CancellationToken cancellationToken)
-    {
-        await Task.Run(() =>
-        {
-            while (!concurrentQueue.IsEmpty && !cancellationToken.IsCancellationRequested) ;
-        }, cancellationToken);
     }
     string JoinEnumCollection(IReadOnlyCollection<KeySpecifier> keys, string separator = ",")
     {
