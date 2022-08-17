@@ -9,9 +9,6 @@ using System.IO.Ports;
 using System.Text;
 using HogeiJunkyard;
 
-var cancellationTokenSource = new CancellationTokenSource();
-var cancellationToken = cancellationTokenSource.Token;
-
 // SerialPortの宣言方法と設定
 using var serialPort = new SerialPort("COM6", 4800)
 {
@@ -23,11 +20,11 @@ using var serialPort = new SerialPort("COM6", 4800)
 serialPort.Open();
 var whale = new WhaleController(serialPort);
 
-await whale.Run(new Operation[]
+whale.Run(new Operation[]
 {
     new Operation(new KeySpecifier[] { KeySpecifier.Start_Down }, TimeSpan.FromMilliseconds(500)),
     new Operation(new KeySpecifier[] { KeySpecifier.Start_Up }, TimeSpan.FromMilliseconds(500)),
     new Operation(new KeySpecifier[] { KeySpecifier.B_Down }, TimeSpan.FromMilliseconds(500)),
     new Operation(new KeySpecifier[] { KeySpecifier.B_Up }, TimeSpan.FromMilliseconds(500)),
-}, cancellationToken);
+});
 ```

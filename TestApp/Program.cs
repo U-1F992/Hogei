@@ -100,34 +100,34 @@ async Task showFourTimes(WhaleController whale)
         new LazyTimer(TimeSpan.FromMilliseconds(0)).Start().ContinueWith(_ =>
         {
             stopwatch.Start();
-            whale.Run(sequence).Wait();
+            whale.Run(sequence);
             using var frame = video.CurrentFrame;
             frame.SaveImage("1.png");
-            whale.Run(reset).Wait();
+            whale.Run(reset);
         }),
         new LazyTimer(TimeSpan.FromMilliseconds(180000)).Start().ContinueWith(_ =>
         {
             Console.WriteLine(stopwatch.ElapsedMilliseconds);
-            whale.Run(sequence).Wait();
+            whale.Run(sequence);
             using var frame = video.CurrentFrame;
             frame.SaveImage("2.png");
-            whale.Run(reset).Wait();
+            whale.Run(reset);
         }),
         new LazyTimer(TimeSpan.FromMilliseconds(360000)).Start().ContinueWith(_ =>
         {
             Console.WriteLine(stopwatch.ElapsedMilliseconds);
-            whale.Run(sequence).Wait();
+            whale.Run(sequence);
             using var frame = video.CurrentFrame;
             frame.SaveImage("3.png");
-            whale.Run(reset).Wait();
+            whale.Run(reset);
         }),
         new LazyTimer(TimeSpan.FromMilliseconds(540000)).Start().ContinueWith(_ =>
         {
             Console.WriteLine(stopwatch.ElapsedMilliseconds);
-            whale.Run(sequence).Wait();
+            whale.Run(sequence);
             using var frame = video.CurrentFrame;
             frame.SaveImage("4.png");
-            whale.Run(reset).Wait();
+            whale.Run(reset);
         })
     );
 

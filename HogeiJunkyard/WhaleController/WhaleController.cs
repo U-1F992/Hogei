@@ -64,42 +64,26 @@ public class WhaleController
         };
     }
 
-    public async Task Run(ICollection<Operation> sequence) { await Run(sequence, CancellationToken.None); }
-    public async Task Run(ICollection<Operation> sequence, CancellationToken cancellationToken)
+    public void Run(ICollection<Operation> sequence)
     {
         foreach (var operation in sequence)
         {
-            await Run(operation, cancellationToken);
+            Run(operation);
         }
     }
-    async Task Run(Operation operation, CancellationToken cancellationToken)
+    void Run(Operation operation)
     {
-        try
-        {
-            await Task.WhenAll(
-                Task.Run(() =>
+        Task.WaitAll
+        (
+            Task.Run(() =>
+            {
+                foreach (var key in operation.Keys)
                 {
-                    foreach (var key in operation.Keys)
-                    {
-                        if (cancellationToken.IsCancellationRequested)
-                        {
-                            return;
-                        }
-
-                        // https://www.arduino.cc/reference/en/language/functions/communication/serial/println/
-                        var buffer = (new char[] { (char)key }).Concat(newline.ToCharArray()).ToArray();
-                        var bytes = Encoding.UTF8.GetBytes(buffer);
-
-                        this.serialPort.BaseStream.WriteAsync(bytes);
-                    }
-                }, cancellationToken),
-                Task.Delay(operation.Wait, cancellationToken)
-            );
-        }
-        catch (OperationCanceledException)
-        {
-            throw;
-        }
+                    this.serialPort.WriteLine(((char)key).ToString());
+                }
+            }),
+            Task.Delay(operation.Wait)
+        );
     }
     string JoinEnumCollection(IReadOnlyCollection<KeySpecifier> keys, string separator = ",")
     {
