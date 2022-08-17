@@ -21,12 +21,12 @@ using var videoCapture = new VideoCapture(1)
     FrameWidth = 1920,
     FrameHeight = 1080
 };
-var video = new VideoCaptureWrapper(videoCapture);
+var video = new VideoCaptureWrapper(videoCapture, new Size(960, 540));
 
 await Task.Delay(1000);
-await showFourTimes(whale);
+showFourTimes(whale);
 
-async Task showFourTimes(WhaleController whale)
+void showFourTimes(WhaleController whale)
 {
     var stopwatch = new System.Diagnostics.Stopwatch();
     var Key_A_Down = new KeySpecifier[] { KeySpecifier.A_Down };
@@ -95,41 +95,22 @@ async Task showFourTimes(WhaleController whale)
         new Operation(Key_A_Up, TimeSpan.FromMilliseconds(5000)),
     };
 
-    var tasks = Task.WhenAll
-    (
-        new LazyTimer(TimeSpan.FromMilliseconds(0)).Start().ContinueWith(_ =>
+    stopwatch.Start();
+    var count = 0;
+    var timer = new Timer(_ =>
+    {
+        if (count > 3)
         {
-            stopwatch.Start();
-            whale.Run(sequence);
-            using var frame = video.CurrentFrame;
-            frame.SaveImage("1.png");
-            whale.Run(reset);
-        }),
-        new LazyTimer(TimeSpan.FromMilliseconds(180000)).Start().ContinueWith(_ =>
-        {
-            Console.WriteLine(stopwatch.ElapsedMilliseconds);
-            whale.Run(sequence);
-            using var frame = video.CurrentFrame;
-            frame.SaveImage("2.png");
-            whale.Run(reset);
-        }),
-        new LazyTimer(TimeSpan.FromMilliseconds(360000)).Start().ContinueWith(_ =>
-        {
-            Console.WriteLine(stopwatch.ElapsedMilliseconds);
-            whale.Run(sequence);
-            using var frame = video.CurrentFrame;
-            frame.SaveImage("3.png");
-            whale.Run(reset);
-        }),
-        new LazyTimer(TimeSpan.FromMilliseconds(540000)).Start().ContinueWith(_ =>
-        {
-            Console.WriteLine(stopwatch.ElapsedMilliseconds);
-            whale.Run(sequence);
-            using var frame = video.CurrentFrame;
-            frame.SaveImage("4.png");
-            whale.Run(reset);
-        })
-    );
+            return;
+        }
 
-    await tasks;
+        Console.WriteLine("{0}: {1}", count, stopwatch.ElapsedMilliseconds);
+        whale.Run(sequence);
+        using var frame = video.CurrentFrame;
+        frame.SaveImage(string.Format("{0}.png", count));
+        whale.Run(reset);
+        
+        Interlocked.Increment(ref count);
+    }, null, TimeSpan.Zero, TimeSpan.FromMinutes(3));
+    Thread.Sleep(TimeSpan.FromMinutes(3 * 4));
 }
