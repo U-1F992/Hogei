@@ -7,7 +7,7 @@
 ```csharp
 using System.IO.Ports;
 using System.Text;
-using HogeiJunkyard;
+using Hogei;
 
 // SerialPortの宣言方法と設定
 using var serialPort = new SerialPort("COM6", 4800)
@@ -18,6 +18,7 @@ using var serialPort = new SerialPort("COM6", 4800)
     RtsEnable = true
 };
 serialPort.Open();
+
 var whale = new WhaleController(serialPort);
 
 whale.Run(new Operation[]
