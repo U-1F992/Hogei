@@ -1,4 +1,4 @@
-namespace HogeiJunkyard;
+namespace Hogei;
 public record Operation
 {
     KeySpecifier[] _Keys;

@@ -1,4 +1,4 @@
-﻿namespace HogeiJunkyard;
+﻿namespace Hogei;
 
 using OpenCvSharp;
 using OpenCvSharp.Text;

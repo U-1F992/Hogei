@@ -1,4 +1,4 @@
-namespace HogeiJunkyard;
+namespace Hogei;
 
 using System.Text.Json.Serialization;
 public readonly struct TessConfig

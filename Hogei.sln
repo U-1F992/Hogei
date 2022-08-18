@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.30114.105
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestApp", "TestApp\TestApp.csproj", "{992E7F2E-9E34-46B7-A44A-ABB1EEE6EC77}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HogeiJunkyard", "HogeiJunkyard\HogeiJunkyard.csproj", "{FE1F5787-FD83-4D3D-B217-B4C36B138B11}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hogei", "Hogei\Hogei.csproj", "{FE1F5787-FD83-4D3D-B217-B4C36B138B11}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

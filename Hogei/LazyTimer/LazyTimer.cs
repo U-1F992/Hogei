@@ -1,4 +1,4 @@
-﻿namespace HogeiJunkyard;
+﻿namespace Hogei;
 public class LazyTimer
 {
     Task task = Task.CompletedTask;

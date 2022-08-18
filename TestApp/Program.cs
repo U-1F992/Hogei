@@ -1,7 +1,7 @@
 ﻿using System.IO.Ports;
 using System.Text;
 using OpenCvSharp;
-using HogeiJunkyard;
+using Hogei;
 
 var cancellationTokenSource = new CancellationTokenSource();
 var cancellationToken = cancellationTokenSource.Token;

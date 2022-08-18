@@ -2,7 +2,7 @@
 using System.Text;
 using NLog;
 
-namespace HogeiJunkyard;
+namespace Hogei;
 public class WhaleController
 {
     static Logger logger = LogManager.GetCurrentClassLogger();

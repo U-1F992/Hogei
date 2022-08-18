@@ -1,4 +1,4 @@
-namespace HogeiJunkyard;
+namespace Hogei;
 public enum KeySpecifier
 {
     A_Down = 'a',
