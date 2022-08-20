@@ -4,7 +4,7 @@
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Version>1.0.0</Version>
+    <Version>2.0.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
@@ -12,6 +12,10 @@
     <PackageReference Include="NLog" Version="5.0.1" />
     <PackageReference Include="NLog.Config" Version="4.7.15" />
     <PackageReference Include="OpenCvSharp4" Version="4.6.0.20220608" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="NLog.config" CopyToOutputDirectory="Always" />
   </ItemGroup>
 
 </Project>

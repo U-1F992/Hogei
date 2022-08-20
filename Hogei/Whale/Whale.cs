@@ -3,7 +3,7 @@ using System.Text;
 using NLog;
 
 namespace Hogei;
-public class WhaleController
+public class Whale
 {
     static Logger logger = LogManager.GetCurrentClassLogger();
 
@@ -13,7 +13,7 @@ public class WhaleController
     string buffer = "";
     object lockObject = new Object();
 
-    public WhaleController(SerialPort serialPort)
+    public Whale(SerialPort serialPort)
     {
         if (serialPort.Encoding != Encoding.UTF8)
         {

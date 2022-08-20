@@ -1,32 +1,36 @@
-﻿using System.IO.Ports;
-using System.Text;
-using OpenCvSharp;
+﻿using OpenCvSharp;
 using Hogei;
 
 var cancellationTokenSource = new CancellationTokenSource();
 var cancellationToken = cancellationTokenSource.Token;
 
-using var serialPort = new SerialPort("COM6", 4800)
+using var serialPort = SerialPortFactory.FromJson(Path.Join(AppContext.BaseDirectory, "serialport.config.json"));
+if (serialPort.DtrEnable != true)
 {
-    Encoding = Encoding.UTF8,
-    NewLine = "\r\n",
-    DtrEnable = true,
-    RtsEnable = true
-};
+    Console.Error.WriteLine("assertion failed");
+    return;
+}
 serialPort.Open();
-var whale = new WhaleController(serialPort);
+var whale = new Whale(serialPort);
 
-using var videoCapture = new VideoCapture(1)
+using var videoCapture = VideoCaptureFactory.FromJson(Path.Join(AppContext.BaseDirectory, "videocapture.config.json"));
+var preview = new Preview(videoCapture, new Size(960, 540));
+var prev = DateTime.Now;
+preview.Process += mat =>
 {
-    FrameWidth = 1920,
-    FrameHeight = 1080
+    Cv2.PutText(mat, DateTime.Now.ToString(), new Point(100, 100), HersheyFonts.HersheySimplex, 1, Scalar.White, 3);
+    
+    var now = DateTime.Now;
+    Cv2.PutText(mat, string.Format("fps: {0:F4}", 1000 / (now - prev).TotalMilliseconds), new Point(100, 150), HersheyFonts.HersheySimplex, 1, Scalar.White, 3);
+    prev = now;
+
+    return mat;
 };
-var video = new VideoCaptureWrapper(videoCapture, new Size(960, 540));
 
 await Task.Delay(1000);
 showFourTimes(whale);
 
-void showFourTimes(WhaleController whale)
+void showFourTimes(Whale whale)
 {
     var stopwatch = new System.Diagnostics.Stopwatch();
     var Key_A_Down = new KeySpecifier[] { KeySpecifier.A_Down };
@@ -106,7 +110,7 @@ void showFourTimes(WhaleController whale)
 
         Console.WriteLine("{0}: {1}", count, stopwatch.ElapsedMilliseconds);
         whale.Run(sequence);
-        using var frame = video.CurrentFrame;
+        using var frame = preview.CurrentFrame;
         frame.SaveImage(string.Format("{0}.png", count));
         whale.Run(reset);
         

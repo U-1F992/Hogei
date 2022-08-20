@@ -1,4 +1,4 @@
-# VideoCaptureWrapper
+# Preview
 
 別スレッドでの常時Mat取得と、プレビュー表示を行うラッパークラス
 
@@ -8,17 +8,4 @@
 
 ```pwsh
 dotnet add .\TestApp\ package OpenCvSharp4.runtime.win
-```
-
-```csharp
-using OpenCvSharp;
-using Hogei;
-
-using var videoCapture = new VideoCapture(1)
-{
-    FrameWidth = 1920,
-    FrameHeight = 1080
-};
-
-var video = new VideoCaptureWrapper(videoCapture, new Size(960, 540));
 ```

@@ -4,17 +4,20 @@ using System.Diagnostics;
 using OpenCvSharp;
 using NLog;
 
-public class VideoCaptureWrapper
+public class Preview
 {
     static Logger logger = LogManager.GetCurrentClassLogger();
 
     VideoCapture videoCapture;
     Mat mat = new Mat();
     Task task;
+    
+    public delegate Mat ProcessHandler(Mat mat);
+    public event ProcessHandler Process = mat => { return mat; };
 
-    public VideoCaptureWrapper(VideoCapture videoCapture) : this(videoCapture, Size.Zero, null) { }
-    public VideoCaptureWrapper(VideoCapture videoCapture, Size windowSize) : this(videoCapture, windowSize, null) { }
-    public VideoCaptureWrapper(VideoCapture videoCapture, Size windowSize, string? windowName)
+    public Preview(VideoCapture videoCapture) : this(videoCapture, Size.Zero, null) { }
+    public Preview(VideoCapture videoCapture, Size windowSize) : this(videoCapture, windowSize, null) { }
+    public Preview(VideoCapture videoCapture, Size windowSize, string? windowName)
     {
         this.videoCapture = videoCapture;
 
@@ -29,7 +32,7 @@ public class VideoCaptureWrapper
             Task.Run(() =>
             {
                 // matを更新するTask
-                while (!this.videoCapture.IsOpened());
+                while (!this.videoCapture.IsOpened()) ;
 
                 stopwatch.Start();
                 while (true)
@@ -63,6 +66,7 @@ public class VideoCaptureWrapper
                     try
                     {
                         using var raw = CurrentFrame;
+                        using var processed = Process(raw);
                         using var resized = raw.Resize(windowSize);
                         window.ShowImage(resized);
                     }
@@ -74,7 +78,7 @@ public class VideoCaptureWrapper
                     if (Cv2.WaitKey(1) == (int)'s')
                     {
                         var fileName = Path.Combine(AppContext.BaseDirectory, DateTime.Now.ToString("yyyyMMddHHmmssfff") + ".png");
-                        
+
                         using var save = CurrentFrame;
                         save.SaveImage(fileName);
 
