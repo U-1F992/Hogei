@@ -11,6 +11,7 @@
   <ItemGroup>
     <None Update="serialport.config.json" CopyToOutputDirectory="Always" />
     <None Update="videocapture.config.json" CopyToOutputDirectory="Always" />
+    <None Update="sequences.json" CopyToOutputDirectory="Always" />
   </ItemGroup>
 
   <PropertyGroup>

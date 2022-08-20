@@ -13,7 +13,7 @@ public class Preview
     Task task;
     
     public delegate Mat ProcessHandler(Mat mat);
-    public event ProcessHandler Process = mat => { return mat; };
+    public event ProcessHandler Process = mat => mat;
 
     public Preview(VideoCapture videoCapture) : this(videoCapture, Size.Zero, null) { }
     public Preview(VideoCapture videoCapture, Size windowSize) : this(videoCapture, windowSize, null) { }
