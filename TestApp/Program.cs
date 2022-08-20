@@ -1,13 +1,13 @@
 ﻿using OpenCvSharp;
 using Hogei;
 
-var GetFullPath = (string fileName) => Path.Join(AppContext.BaseDirectory, fileName);
+var resolve = (string fileName) => Path.Join(AppContext.BaseDirectory, fileName);
 
-using var serialPort = SerialPortFactory.FromJson(GetFullPath("serialport.config.json"));
+using var serialPort = SerialPortFactory.FromJson(resolve("serialport.config.json"));
 serialPort.Open();
 var whale = new Whale(serialPort);
 
-using var videoCapture = VideoCaptureFactory.FromJson(GetFullPath("videocapture.config.json"));
+using var videoCapture = VideoCaptureFactory.FromJson(resolve("videocapture.config.json"));
 var preview = new Preview(videoCapture, new Size(960, 540));
 var prev = DateTime.Now;
 preview.Process += mat =>
@@ -21,20 +21,20 @@ preview.Process += mat =>
     return mat;
 };
 
-showFourTimes(whale, preview);
+await ShowFourTimes(whale, preview);
 
-void showFourTimes(Whale whale, Preview preview)
+async Task ShowFourTimes(Whale whale, Preview preview)
 {
-    Thread.Sleep(1000);
+    await Task.Delay(1000);
     var stopwatch = new System.Diagnostics.Stopwatch();
 
-    var sequences = Operation.GetDictionaryFromJson(GetFullPath("sequences.json"));
+    var sequences = Operation.GetDictionaryFromJson(resolve("sequences.json"));
     var load = sequences["load"];
     var reset = sequences["reset"];
 
     stopwatch.Start();
     var count = 0;
-    var timer = new Timer(_ =>
+    using var timer = new Timer(async _ =>
     {
         if (count > 3)
         {
@@ -42,13 +42,15 @@ void showFourTimes(Whale whale, Preview preview)
         }
 
         Console.WriteLine("{0}: {1}", count, stopwatch.ElapsedMilliseconds);
-        whale.Run(load);
+        await whale.RunAsync(load);
+
         using var frame = preview.CurrentFrame;
         frame.SaveImage(string.Format("{0}.png", count));
-        whale.Run(reset);
+        
+        await whale.RunAsync(reset);
         
         Interlocked.Increment(ref count);
     }, null, TimeSpan.Zero, TimeSpan.FromMinutes(3));
 
-    Thread.Sleep(TimeSpan.FromMinutes(3 * 4));
+    await Task.Delay(TimeSpan.FromMinutes(3 * 4));
 }

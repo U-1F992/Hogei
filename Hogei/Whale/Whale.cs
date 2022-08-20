@@ -85,13 +85,31 @@ public class Whale
             Task.Delay(operation.Wait)
         );
     }
-    string JoinEnumCollection(IReadOnlyCollection<KeySpecifier> keys, string separator = ",")
+
+    public async Task RunAsync(ICollection<Operation> sequence) { await RunAsync(sequence, CancellationToken.None); }
+    public async Task RunAsync(ICollection<Operation> sequence, CancellationToken cancellationToken)
     {
-        var join = "";
-        foreach (var key in keys)
+        foreach (var operation in sequence)
         {
-            join += key + separator;
+            await RunAsync(operation, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
         }
-        return join.Remove(join.Length - separator.Length);
+    }
+    async Task RunAsync(Operation operation, CancellationToken cancellationToken)
+    {
+        await Task.WhenAll
+        (
+            Task.Run(() =>
+            {
+                foreach (var key in operation.Keys)
+                {
+                    var buffer = (new char[] { (char)key }).Concat(newline.ToCharArray()).ToArray();
+                    var bytes = serialPort.Encoding.GetBytes(buffer);
+
+                    serialPort.BaseStream.WriteAsync(bytes, cancellationToken);
+                }
+            }),
+            Task.Delay(operation.Wait, cancellationToken)
+        );
     }
 }
